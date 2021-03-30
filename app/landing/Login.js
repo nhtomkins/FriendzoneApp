@@ -11,10 +11,25 @@ import {
 
 import { useForm, Controller } from 'react-hook-form'
 
-function Login() {
+import { useAuth } from '../../contexts/AuthContext'
+
+function Login({ nav }) {
+  const { login } = useAuth()
+
   const { control, handleSubmit, errors } = useForm()
-  const onSubmit = (data) => {
-    console.log(data)
+  const [loading, setLoading] = useState(false)
+
+  async function onSubmit(data) {
+    try {
+      //setError('')
+      setLoading(true)
+      await login(data.email, data.password)
+      //history.push('/lineup')
+    } catch {
+      //setError('Failed to sign in')
+      setLoading(false)
+    }
+    //nav.navigate('Main')
   }
 
   const [emailFocus, setEmailFocus] = useState(false)
@@ -69,7 +84,11 @@ function Login() {
       />
       {errors.password && <Text>This is required.</Text>}
 
-      <Button title="Submit" onPress={handleSubmit(onSubmit)} />
+      <Button
+        title="Submit"
+        disabled={loading}
+        onPress={handleSubmit(onSubmit)}
+      />
     </View>
   )
 }

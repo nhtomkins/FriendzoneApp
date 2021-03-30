@@ -1,65 +1,73 @@
 import { StatusBar } from 'expo-status-bar'
-import React from 'react'
-import {
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  Button,
-  Alert,
-} from 'react-native'
+import React, { useState } from 'react'
+import { StyleSheet, Text, View, TextInput, Button, Alert } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import Login from './app/home/Login'
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
+import LandingPage from './app/landing/LandingPage'
+import {
+  SafeAreaProvider,
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context'
+
+import { useAuth, AuthProvider } from './contexts/AuthContext'
 
 const Stack = createStackNavigator()
-const Tab = createBottomTabNavigator()
+//const Tab = createBottomTabNavigator()
+Tab = createMaterialTopTabNavigator()
 
 function Home() {
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#673ab7', '#ffa726']}
-        style={styles.background}
-      />
-      <Text>Ignite</Text>
-      <MaterialIcons name="local-activity" size={48} color="black" />
-      <Login />
-    </View>
+    <SafeAreaView style={styles.container}>
+      <Text>Home</Text>
+    </SafeAreaView>
   )
 }
 
 function Lineup() {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text>Lineup</Text>
-    </View>
+    </SafeAreaView>
   )
 }
 
 function Messages() {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text>Messages</Text>
-    </View>
+    </SafeAreaView>
   )
 }
 
 function Profile() {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text>Profile</Text>
-    </View>
+    </SafeAreaView>
   )
 }
 
 function MainNavigator() {
+  const insets = useSafeAreaInsets()
+
   return (
     <Tab.Navigator
+      style={{ paddingTop: insets.top }}
+      tabBarOptions={{
+        showIcon: true,
+        showLabel: false,
+        activeTintColor: '#673ab7',
+        inactiveTintColor: 'gray',
+        indicatorStyle: {
+          backgroundColor: '#673ab7',
+        },
+      }}
+      //tabBarPosition="bottom"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName
@@ -74,15 +82,9 @@ function MainNavigator() {
             iconName = 'person'
           }
 
-          // You can return any component that you like here!
-          return <MaterialIcons name={iconName} size={size} color={color} />
+          return <MaterialIcons name={iconName} size={24} color={color} />
         },
       })}
-      tabBarOptions={{
-        activeTintColor: '#673ab7',
-        inactiveTintColor: 'gray',
-        showLabel: false,
-      }}
     >
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Lineup" component={Lineup} />
@@ -92,16 +94,30 @@ function MainNavigator() {
   )
 }
 
+function Main() {
+  const [loading, setLoading] = useState(true)
+  const { currentUser } = useAuth()
+  return (
+    <NavigationContainer>
+      <StatusBar style="auto" />
+      <Stack.Navigator headerMode={'none'}>
+        {currentUser ? (
+          <Stack.Screen name="Main" component={MainNavigator} />
+        ) : (
+          <Stack.Screen name="Landing" component={LandingPage} />
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  )
+}
+
 export default function App() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <NavigationContainer>
-        <StatusBar style="auto" />
-        <Stack.Navigator headerMode={'none'}>
-          <Stack.Screen name="Main" component={MainNavigator} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaView>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <Main />
+      </AuthProvider>
+    </SafeAreaProvider>
   )
 }
 
