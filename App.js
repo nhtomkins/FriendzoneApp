@@ -15,23 +15,42 @@ import {
 } from 'react-native-safe-area-context'
 
 import { useAuth, AuthProvider } from './contexts/AuthContext'
+import Profile from './app/profile/Profile'
+import LineupProfile from './app/lineup/LineupProfile'
+import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs'
+import {
+  DefaultTheme,
+  Provider as PaperProvider,
+  useTheme,
+} from 'react-native-paper'
+
+import Lineup from './app/lineup/Lineup'
 
 const Stack = createStackNavigator()
 //const Tab = createBottomTabNavigator()
-Tab = createMaterialTopTabNavigator()
+const Tab = createMaterialTopTabNavigator()
+//Tab = createMaterialBottomTabNavigator()
+
+const theme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: '#673ab7',
+    secondary: '#ffa726',
+    accent: '#ffb851',
+    activities: '#a47aff',
+    lifestyle: '#ff8c3b',
+    movies: '#ffd333',
+    music: '#61cdff',
+    sports: '#07e6a0',
+    background: '#f0f0f0',
+  },
+}
 
 function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <Text>Home</Text>
-    </SafeAreaView>
-  )
-}
-
-function Lineup() {
-  return (
-    <SafeAreaView style={styles.container}>
-      <Text>Lineup</Text>
     </SafeAreaView>
   )
 }
@@ -44,52 +63,64 @@ function Messages() {
   )
 }
 
-function Profile() {
-  return (
-    <SafeAreaView style={styles.container}>
-      <Text>Profile</Text>
-    </SafeAreaView>
-  )
-}
-
 function MainNavigator() {
   const insets = useSafeAreaInsets()
+  const { colors } = useTheme()
 
   return (
     <Tab.Navigator
-      style={{ paddingTop: insets.top }}
+      //style={{ paddingTop: insets.top }}
       tabBarOptions={{
+        labeled: false,
         showIcon: true,
         showLabel: false,
-        activeTintColor: '#673ab7',
+        activeTintColor: colors.primary,
         inactiveTintColor: 'gray',
         indicatorStyle: {
           backgroundColor: '#673ab7',
         },
-      }}
-      //tabBarPosition="bottom"
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName
-
-          if (route.name === 'Home') {
-            iconName = 'home'
-          } else if (route.name === 'Lineup') {
-            iconName = 'search'
-          } else if (route.name === 'Messages') {
-            iconName = 'message'
-          } else if (route.name === 'Profile') {
-            iconName = 'person'
-          }
-
-          return <MaterialIcons name={iconName} size={24} color={color} />
+        style: {
+          backgroundColor: 'white',
         },
-      })}
+      }}
+      tabBarPosition="bottom"
     >
-      <Tab.Screen name="Home" component={Home} />
-      <Tab.Screen name="Lineup" component={Lineup} />
-      <Tab.Screen name="Messages" component={Messages} />
-      <Tab.Screen name="Profile" component={Profile} />
+      <Tab.Screen
+        name="Home"
+        component={Home}
+        options={{
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="home" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Lineup"
+        component={Lineup}
+        options={{
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="search" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Messages"
+        component={Messages}
+        options={{
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="message" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={Profile}
+        options={{
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="person" size={24} color={color} />
+          ),
+        }}
+      />
     </Tab.Navigator>
   )
 }
@@ -97,9 +128,11 @@ function MainNavigator() {
 function Main() {
   const [loading, setLoading] = useState(true)
   const { currentUser } = useAuth()
+  const { colors } = useTheme()
+
   return (
     <NavigationContainer>
-      <StatusBar style="auto" />
+      <StatusBar style="light" backgroundColor={colors.primary} />
       <Stack.Navigator headerMode={'none'}>
         {currentUser ? (
           <Stack.Screen name="Main" component={MainNavigator} />
@@ -115,7 +148,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <Main />
+        <PaperProvider theme={theme}>
+          <Main />
+        </PaperProvider>
       </AuthProvider>
     </SafeAreaProvider>
   )
@@ -124,7 +159,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
   },

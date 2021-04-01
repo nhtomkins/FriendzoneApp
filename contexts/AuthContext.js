@@ -97,25 +97,15 @@ export const AuthProvider = ({ children }) => {
       .catch((err) => console.error(err))
   }
 
-  function getAllUsers(user) {
-    return firestore
-      .collection('users')
-      .get()
-      .then((data) => {
-        let users = []
-        data.forEach((doc) => {
-          if (user.uid !== doc.id) {
-            const profile = doc.data()
-            if (profile.checklist?.complete) {
-              users.push({
-                ...profile,
-              })
-            }
-          }
-        })
-        setAllUsers(users)
-      })
-      .catch((err) => console.error(err))
+  function getAllUsers() {
+    return (
+      firestore
+        .collection('users')
+        .where('checklist.complete', '==', true)
+        //.where('userId', '!=', currentUser.uid)
+        .get()
+        .catch((err) => console.error(err))
+    )
   }
 
   function updateUserImage(file, id) {
@@ -298,10 +288,6 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = auth.onAuthStateChanged(
       (user) => {
         setCurrentUser(user)
-        if (user) {
-          getAllUsers(user)
-          //getFriends(user.uid)
-        }
         setLoading(false)
       },
       (err) => console.error(err),
@@ -449,6 +435,7 @@ export const AuthProvider = ({ children }) => {
     unlikeUser,
     sendPrivateMessage,
     getInterestsData,
+    getAllUsers,
   }
 
   return (
