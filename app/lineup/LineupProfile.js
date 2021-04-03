@@ -40,7 +40,7 @@ const LineupProfileInterests = (props) => {
       {props.imgUrl && (
         <View style={{ marginBottom: 10 }}>
           <Image
-            style={{ width: '60%', aspectRatio: 1 }}
+            style={{ width: '80%', aspectRatio: 1, borderRadius: 8 }}
             source={{
               uri: props.imgUrl,
             }}
@@ -83,11 +83,14 @@ const LineupProfile = ({ expanded = false, navigation = null, ...props }) => {
   const { likeUser, unlikeUser, userData } = useAuth()
   const { colors } = useTheme()
 
-  const [numActivities, setNumActivities] = useState(0)
-  const [numLifestyle, setNumLifestyle] = useState(0)
-  const [numMovies, setNumMovies] = useState(0)
-  const [numMusic, setNumMusic] = useState(0)
-  const [numSports, setNumSports] = useState(0)
+  const [sameActivities, setSameActivities] = useState([])
+  const [sameLifestyle, setSameLifestyle] = useState([])
+  const [sameMovies, setSameMovies] = useState([])
+  const [sameMusic, setSameMusic] = useState([])
+  const [sameSports, setSameSports] = useState([])
+
+  const [showSameInterests, setShowSameInterests] = useState([])
+  const [showSameColor, setShowSameColor] = useState(null)
 
   const handleLike = (e) => {
     console.log('liked')
@@ -98,45 +101,62 @@ const LineupProfile = ({ expanded = false, navigation = null, ...props }) => {
     unlikeUser(props)
   }
 
+  const handleShowSame = (interests, color) => {
+    if (showSameColor === color) {
+      setShowSameInterests([])
+      setShowSameColor(null)
+    } else {
+      setShowSameInterests(interests)
+      setShowSameColor(color)
+    }
+  }
+
   useEffect(() => {
     if (props.userId !== userData.userId) {
       props.activities?.forEach((item) => {
         userData.activities?.includes(item) &&
-          setNumActivities((count) => count + 1)
+          setSameActivities((current) => [...current, item])
       })
       props.lifestyle?.forEach((item) => {
         userData.lifestyle?.includes(item) &&
-          setNumLifestyle((count) => count + 1)
+          setSameLifestyle((current) => [...current, item])
       })
       props.movies?.forEach((item) => {
-        userData.movies?.includes(item) && setNumMovies((count) => count + 1)
+        userData.movies?.includes(item) &&
+          setSameMovies((current) => [...current, item])
       })
       props.music?.forEach((item) => {
-        userData.music?.includes(item) && setNumMusic((count) => count + 1)
+        userData.music?.includes(item) &&
+          setSameMusic((current) => [...current, item])
       })
       props.sports?.forEach((item) => {
-        userData.sports?.includes(item) && setNumSports((count) => count + 1)
+        userData.sports?.includes(item) &&
+          setSameSports((current) => [...current, item])
       })
     }
     return () => {
-      setNumActivities(0)
-      setNumLifestyle(0)
-      setNumMovies(0)
-      setNumMusic(0)
-      setNumSports(0)
+      setSameActivities([])
+      setSameLifestyle([])
+      setSameMovies([])
+      setSameMusic([])
+      setSameSports([])
     }
   }, [props.userId])
 
   return (
     <View style={styles.container}>
-      <Image
-        style={styles.topImage}
-        source={{
-          uri:
-            props.profileImgUrl ||
-            'https://firebasestorage.googleapis.com/v0/b/friendzone-dev-1c6af.appspot.com/o/no-user-tall.png?alt=media&token=d01e48ef-4e74-4022-a3ae-abe43be5fd91',
-        }}
-      />
+      <View
+        style={{ flex: 1, alignItems: 'center', marginTop: expanded ? 0 : 30 }}
+      >
+        <Image
+          style={expanded ? styles.topImageFull : styles.topImage}
+          source={{
+            uri:
+              props.profileImgUrl ||
+              'https://firebasestorage.googleapis.com/v0/b/friendzone-dev-1c6af.appspot.com/o/no-user-tall.png?alt=media&token=d01e48ef-4e74-4022-a3ae-abe43be5fd91',
+          }}
+        />
+      </View>
 
       <View style={{ flex: 1, paddingTop: 10 }}>
         <View style={{ flex: 1, marginVertical: 16, marginHorizontal: 26 }}>
@@ -180,8 +200,10 @@ const LineupProfile = ({ expanded = false, navigation = null, ...props }) => {
             {props.highlights?.map((item, j) => (
               <Chip
                 key={j}
+                mode="outlined"
                 style={{
-                  backgroundColor: colors.accent,
+                  borderColor: colors.accent,
+                  borderWidth: 1,
                   margin: 2,
                 }}
                 textStyle={{ fontSize: 13 }}
@@ -201,52 +223,105 @@ const LineupProfile = ({ expanded = false, navigation = null, ...props }) => {
             marginHorizontal: 12,
           }}
         >
-          <View
+          <Pressable
             style={[
               styles.similaritiesChip,
-              { borderColor: colors.activities },
+              {
+                backgroundColor: colors.activities,
+                borderColor: colors.activities,
+              },
             ]}
+            onPress={() => handleShowSame(sameActivities, colors.activities)}
           >
-            <Text style={styles.chipText}>{numActivities}</Text>
+            <Text style={styles.chipText}>{sameActivities.length}</Text>
             <MaterialIcons
               name="local-activity"
               size={24}
-              color={colors.activities}
+              color="white" //{colors.activities}
             />
-          </View>
-          <View
-            style={[styles.similaritiesChip, { borderColor: colors.lifestyle }]}
+          </Pressable>
+
+          <Pressable
+            style={[
+              styles.similaritiesChip,
+              {
+                backgroundColor: colors.lifestyle,
+                borderColor: colors.lifestyle,
+              },
+            ]}
+            onPress={() => handleShowSame(sameLifestyle, colors.lifestyle)}
           >
-            <Text style={styles.chipText}>{numLifestyle}</Text>
+            <Text style={styles.chipText}>{sameLifestyle.length}</Text>
             <MaterialIcons
               name="local-bar"
               size={24}
-              color={colors.lifestyle}
+              color="white" //{colors.lifestyle}
             />
-          </View>
-          <View
-            style={[styles.similaritiesChip, { borderColor: colors.movies }]}
+          </Pressable>
+          <Pressable
+            style={[
+              styles.similaritiesChip,
+              { backgroundColor: colors.movies, borderColor: colors.movies },
+            ]}
+            onPress={() => handleShowSame(sameMovies, colors.movies)}
           >
-            <Text style={styles.chipText}>{numMovies}</Text>
-            <MaterialIcons name="movie" size={24} color={colors.movies} />
-          </View>
-          <View
-            style={[styles.similaritiesChip, { borderColor: colors.music }]}
+            <Text style={styles.chipText}>{sameMovies.length}</Text>
+            <MaterialIcons name="movie" size={24} color="white" />
+          </Pressable>
+          <Pressable
+            style={[
+              styles.similaritiesChip,
+              { backgroundColor: colors.music, borderColor: colors.music },
+            ]}
+            onPress={() => handleShowSame(sameMusic, colors.music)}
           >
-            <Text style={styles.chipText}>{numMusic}</Text>
-            <MaterialIcons name="music-note" size={24} color={colors.music} />
-          </View>
-          <View
-            style={[styles.similaritiesChip, { borderColor: colors.sports }]}
+            <Text style={styles.chipText}>{sameMusic.length}</Text>
+            <MaterialIcons name="music-note" size={24} color="white" />
+          </Pressable>
+          <Pressable
+            style={[
+              styles.similaritiesChip,
+              { backgroundColor: colors.sports, borderColor: colors.sports },
+            ]}
+            onPress={() => handleShowSame(sameSports, colors.sports)}
           >
-            <Text style={styles.chipText}>{numSports}</Text>
-            <MaterialIcons
-              name="fitness-center"
-              size={24}
-              color={colors.sports}
-            />
-          </View>
+            <Text style={styles.chipText}>{sameSports.length}</Text>
+            <MaterialIcons name="fitness-center" size={24} color="white" />
+          </Pressable>
         </View>
+
+        {!!showSameInterests.length && (
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              justifyContent: 'center',
+              marginHorizontal: 12,
+              marginBottom: 12,
+              paddingVertical: 4,
+              borderWidth: 1,
+              borderColor: showSameColor,
+              borderRadius: 8,
+            }}
+          >
+            {showSameInterests.map((item, j) => (
+              <Chip
+                key={j}
+                mode="outlined"
+                style={{
+                  borderColor: showSameColor,
+                  backgroundColor: showSameColor,
+                  borderWidth: 1,
+                  margin: 2,
+                }}
+                textStyle={{ fontSize: 13 }}
+              >
+                {item}
+              </Chip>
+            ))}
+          </View>
+        )}
+
         {expanded ? (
           <View>
             {props.activities && (
@@ -319,13 +394,15 @@ const LineupProfile = ({ expanded = false, navigation = null, ...props }) => {
                 onPress={() => {
                   navigation.navigate('Profile', { ...props })
                 }}
+                style={{ padding: 10 }}
               >
-                <MaterialIcons
+                {/* <MaterialIcons
                   style={styles.likeIcon}
                   name="info"
                   size={30}
                   color={colors.secondary}
-                />
+                /> */}
+                <Text style={{ color: colors.secondary }}>See more...</Text>
               </Pressable>
 
               {!userData.likedUsers?.includes(props.userId) && (
@@ -371,9 +448,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   topImage: {
+    width: '85%',
+    aspectRatio: 3 / 4,
+    borderRadius: 8,
+  },
+  topImageFull: {
     width: '100%',
     aspectRatio: 3 / 4,
     //aspectRatio: 1,
+    //borderRadius: 8,
   },
   similaritiesChip: {
     flex: 0.2,
@@ -388,6 +471,8 @@ const styles = StyleSheet.create({
   },
   chipText: {
     marginRight: 6,
+    color: 'white',
+    fontWeight: '700',
   },
   likeBar: {
     flex: 1,
@@ -397,7 +482,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     width: '100%',
   },
-  likeIcon: {},
+  likeIcon: {
+    padding: 10,
+  },
   moreIcon: {
     position: 'absolute',
     right: 20,
