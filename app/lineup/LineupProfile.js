@@ -392,7 +392,7 @@ const LineupProfile = ({ expanded = false, navigation = null, ...props }) => {
             <View style={[styles.likeBar]}>
               <Pressable
                 onPress={() => {
-                  navigation.navigate('Profile', { ...props })
+                  navigation.navigate('LineupExpanded', { ...props })
                 }}
                 style={{ padding: 10 }}
               >

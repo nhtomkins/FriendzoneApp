@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, TextInput, Button, Alert } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -15,8 +15,6 @@ import {
 } from 'react-native-safe-area-context'
 
 import { useAuth, AuthProvider } from './contexts/AuthContext'
-import Profile from './app/profile/Profile'
-import LineupProfile from './app/lineup/LineupProfile'
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs'
 import {
   DefaultTheme,
@@ -24,7 +22,13 @@ import {
   useTheme,
 } from 'react-native-paper'
 
-import Lineup from './app/lineup/Lineup'
+import { Lineup, LineupExpanded } from './app/lineup/Lineup'
+import {
+  Profile,
+  MyProfile,
+  EditProfile,
+  EditInterests,
+} from './app/profile/Profile'
 
 const Stack = createStackNavigator()
 //const Tab = createBottomTabNavigator()
@@ -44,6 +48,13 @@ const theme = {
     music: '#61cdff',
     sports: '#07e6a0',
     background: '#f0f0f0',
+  },
+  icons: {
+    activities: 'local-activity',
+    lifestyle: 'local-bar',
+    movies: 'movie',
+    music: 'music-note',
+    sports: 'fitness-center',
   },
 }
 
@@ -133,13 +144,40 @@ function Main() {
   return (
     <NavigationContainer>
       <StatusBar style="light" backgroundColor={colors.primary} />
-      <Stack.Navigator headerMode={'none'}>
-        {currentUser ? (
-          <Stack.Screen name="Main" component={MainNavigator} />
-        ) : (
-          <Stack.Screen name="Landing" component={LandingPage} />
-        )}
-      </Stack.Navigator>
+      {currentUser ? (
+        <Stack.Navigator
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: colors.primary,
+            },
+            headerTintColor: 'white',
+          }}
+        >
+          <Stack.Screen
+            name="Main"
+            component={MainNavigator}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name="LineupExpanded" component={LineupExpanded} />
+          <Stack.Screen
+            name="MyProfile"
+            component={MyProfile}
+            options={{ title: 'My Profile' }}
+          />
+          <Stack.Screen
+            name="EditProfile"
+            component={EditProfile}
+            options={{ title: 'Edit Profile' }}
+          />
+          <Stack.Screen
+            name="EditInterests"
+            component={EditInterests}
+            options={{ title: 'Edit Interests' }}
+          />
+        </Stack.Navigator>
+      ) : (
+        <LandingPage />
+      )}
     </NavigationContainer>
   )
 }

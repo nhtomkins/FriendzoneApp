@@ -18,11 +18,8 @@ import { Avatar } from 'react-native-paper'
 import { Chip, useTheme, Title } from 'react-native-paper'
 import LineupProfile from './LineupProfile'
 import { FlatList } from 'react-native-gesture-handler'
-import { createStackNavigator } from '@react-navigation/stack'
 
-const LineupStack = createStackNavigator()
-
-const LineupExpanded = ({ route, navigation }) => {
+export const LineupExpanded = ({ route, navigation }) => {
   useEffect(() => {
     navigation.setOptions({
       title: route.params.firstname,
@@ -36,7 +33,7 @@ const LineupExpanded = ({ route, navigation }) => {
   )
 }
 
-const LineupHome = ({ navigation }) => {
+export const Lineup = ({ navigation }) => {
   const { userData, getAllUsers } = useAuth()
   const { colors } = useTheme()
   const [lineup, setLineup] = useState(null)
@@ -77,33 +74,6 @@ const LineupHome = ({ navigation }) => {
   )
 }
 
-const Lineup = () => {
-  const { colors } = useTheme()
-
-  return (
-    <LineupStack.Navigator
-      initialRouteName="Home"
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: colors.primary,
-        },
-        headerTintColor: 'white',
-      }}
-    >
-      <LineupStack.Screen
-        name="Home"
-        component={LineupHome}
-        options={{ headerShown: false }}
-      />
-      <LineupStack.Screen
-        name="Profile"
-        component={LineupExpanded}
-        //options={{ title: 'User' }}
-      />
-    </LineupStack.Navigator>
-  )
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -133,5 +103,3 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 })
-
-export default Lineup
