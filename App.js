@@ -30,6 +30,12 @@ import {
   EditInterests,
 } from './app/profile/Profile'
 
+import {
+  Messages,
+  OpenMessage,
+  OpenMessageTitle,
+} from './app/messages/Messages'
+
 const Stack = createStackNavigator()
 //const Tab = createBottomTabNavigator()
 const Tab = createMaterialTopTabNavigator()
@@ -62,14 +68,6 @@ function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <Text>Home</Text>
-    </SafeAreaView>
-  )
-}
-
-function Messages() {
-  return (
-    <SafeAreaView style={styles.container}>
-      <Text>Messages</Text>
     </SafeAreaView>
   )
 }
@@ -174,6 +172,7 @@ function Main() {
             component={EditInterests}
             options={{ title: 'Edit Interests' }}
           />
+          <Stack.Screen name="OpenMessage" component={OpenMessage} />
         </Stack.Navigator>
       ) : (
         <LandingPage />
