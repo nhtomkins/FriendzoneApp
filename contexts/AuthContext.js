@@ -349,11 +349,14 @@ export const AuthProvider = ({ children }) => {
               console.log('messages snapshot fired')
               let messageData = []
               doc.forEach((msg) => {
-                messageData.push(msg.data())
+                const msgData = msg.data()
+                msgData.id = msg.id
+                messageData.push(msgData)
+                //messageData.push(msg.data())
               })
 
               if (messageData.length > 0) {
-                messageData.reverse()
+                //messageData.reverse()
                 setMessages(messageData)
                 setMessagesLoading(false)
               }

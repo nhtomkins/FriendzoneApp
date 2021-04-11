@@ -30,11 +30,7 @@ import {
   EditInterests,
 } from './app/profile/Profile'
 
-import {
-  Messages,
-  OpenMessage,
-  OpenMessageTitle,
-} from './app/messages/Messages'
+import { Messages, OpenFriend } from './app/messages/Messages'
 
 const Stack = createStackNavigator()
 //const Tab = createBottomTabNavigator()
@@ -93,6 +89,7 @@ function MainNavigator() {
         },
       }}
       tabBarPosition="bottom"
+      backBehavior="firstRoute"
     >
       <Tab.Screen
         name="Home"
@@ -172,7 +169,7 @@ function Main() {
             component={EditInterests}
             options={{ title: 'Edit Interests' }}
           />
-          <Stack.Screen name="OpenMessage" component={OpenMessage} />
+          <Stack.Screen name="OpenFriend" component={OpenFriend} />
         </Stack.Navigator>
       ) : (
         <LandingPage />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   StyleSheet,
   Text,
@@ -10,6 +10,7 @@ import {
   Image,
   Pressable,
   ScrollView,
+  FlatList,
 } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -17,6 +18,17 @@ import { useAuth } from '../../contexts/AuthContext'
 import { Avatar, useTheme } from 'react-native-paper'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 import LineupProfile from '../lineup/LineupProfile'
+import { format, isToday } from 'date-fns'
+
+const OpenFriendTab = createMaterialTopTabNavigator()
+
+function displayDateHelper(date) {
+  if (isToday(date)) {
+    return format(date, 'p')
+  } else {
+    return format(date, "ccc',' d MMM',' p")
+  }
+}
 
 function FriendsListItem({ firstname, profileImgUrl, message, sentAt }) {
   return (
@@ -37,34 +49,36 @@ function FriendsListItem({ firstname, profileImgUrl, message, sentAt }) {
   )
 }
 
-function MessageBubble(props) {
+function MessageBubble({ side, message, first }) {
   const { colors } = useTheme()
 
   return (
     <View
       style={{
         flex: 0.7,
-        //flexDirection: 'row',
-        alignItems: props.side === 'left' ? 'flex-start' : 'flex-end',
+        alignItems: side === 'left' ? 'flex-start' : 'flex-end',
+        marginVertical: 1,
+        //marginHorizontal: 5,
       }}
     >
       <Text
         style={[
           styles.bubble,
-          props.side === 'left'
+          side === 'left'
             ? {
                 backgroundColor: 'lightgrey',
+                borderTopLeftRadius: first ? 20 : 8,
+                borderBottomLeftRadius: 8,
               }
             : {
                 backgroundColor: colors.primary,
                 color: 'white',
+                borderTopRightRadius: first ? 20 : 8,
+                borderBottomRightRadius: 8,
               },
         ]}
       >
-        {props.message}
-      </Text>
-      <Text style={styles.sentAtBubble}>
-        {props.sentAt.toDate().toLocaleString('en-AU')}
+        {message}
       </Text>
     </View>
   )
@@ -89,57 +103,104 @@ export function OpenMessageTitle({ firstname, profileImgUrl }) {
 }
 
 export function OpenMessage({ route, navigation }) {
-  const { userData, messages } = useAuth()
+  const { userData, messages, sendPrivateMessage } = useAuth()
   const [openUserMessages, setOpenUserMessages] = useState([])
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
+  const messagesListRef = useRef()
+  const [message, onChangeMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    navigation.setOptions({
-      headerTitle: () => (
-        <OpenMessageTitle
-          firstname={route.params.firstname}
-          profileImgUrl={route.params.profileImgUrl}
-        />
-      ),
+    const filtMessages = []
+    messages.forEach((msg) => {
+      if (
+        msg.toUserId === route.params.userId ||
+        msg.fromUserId === route.params.userId
+      ) {
+        filtMessages.push(msg)
+      }
     })
-    const filtMessages = messages.filter((value) => {
-      return (
-        value.toUserId === route.params.userId ||
-        value.fromUserId === route.params.userId
-      )
-    })
+    filtMessages.length > 1 &&
+      filtMessages.forEach((msg, index) => {
+        if (
+          index < filtMessages.length - 1 &&
+          msg.sentAt?.toDate().getTime() -
+            filtMessages[index + 1].sentAt?.toDate().getTime() <
+            600000 //check if longer than 10 minutes between messages
+        ) {
+          delete filtMessages[index].sentAt
+        }
+      })
     setOpenUserMessages(filtMessages)
-    return () => {
-      setOpenUserMessages([])
+  }, [messages])
+
+  async function handleSendMessage(e) {
+    e.preventDefault()
+
+    if (message !== '') {
+      try {
+        setError('')
+        setLoading(true)
+        await sendPrivateMessage(message, route.params.userId)
+        onChangeMessage('')
+      } catch {
+        setError('Failed to send message')
+      }
+
+      setLoading(false)
     }
-  }, [route])
+  }
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView style={{ flex: 1, flexGrow: 1 }}>
-        <View style={{ flex: 1, marginVertical: 10, marginHorizontal: 10 }}>
-          {openUserMessages &&
-            openUserMessages.map((msg, index) => (
-              <View
-                key={index}
-                style={{
-                  flex: 1,
-                  flexDirection: 'row',
-                  justifyContent: msg.hasOwnProperty('fromUserId')
-                    ? 'flex-start'
-                    : 'flex-end',
-                }}
-              >
-                <MessageBubble
-                  side={msg.hasOwnProperty('fromUserId') ? 'left' : 'right'}
-                  message={msg.message}
-                  sentAt={msg.sentAt}
-                />
-              </View>
-            ))}
-        </View>
-      </ScrollView>
+      <FlatList
+        ListHeaderComponent={<View style={{ height: 10 }} />}
+        ListFooterComponentStyle={{
+          flex: 1,
+          alignItems: 'center',
+          marginBottom: 10,
+        }}
+        ListFooterComponent={
+          <Text style={{ color: 'grey', fontSize: 12 }}>
+            The start of your conversation!
+          </Text>
+        }
+        ref={messagesListRef}
+        inverted={true}
+        data={openUserMessages}
+        renderItem={({ item, index }) => (
+          <View
+            style={{
+              flex: 1,
+              width: '96%',
+              alignSelf: 'center',
+            }}
+          >
+            {item.sentAt && (
+              <Text style={styles.sentAtText}>
+                {displayDateHelper(item.sentAt?.toDate())}
+              </Text>
+            )}
+            <View
+              style={{
+                flex: 1,
+                flexDirection: 'row',
+                justifyContent: item.hasOwnProperty('fromUserId')
+                  ? 'flex-start'
+                  : 'flex-end',
+              }}
+            >
+              <MessageBubble
+                side={item.hasOwnProperty('fromUserId') ? 'left' : 'right'}
+                message={item.message}
+                first={item.hasOwnProperty('sentAt')}
+              />
+            </View>
+          </View>
+        )}
+      />
 
       <View
         style={{
@@ -147,9 +208,11 @@ export function OpenMessage({ route, navigation }) {
           flexGrow: 0,
           flexDirection: 'row',
           alignItems: 'center',
-          flexBasis: 48,
+          flexBasis: 49,
           backgroundColor: 'white',
           padding: 4,
+          borderTopWidth: 1,
+          borderColor: 'grey',
         }}
       >
         <TextInput
@@ -163,29 +226,96 @@ export function OpenMessage({ route, navigation }) {
             paddingHorizontal: 8,
           }}
           placeholder="Type a message..."
+          value={message}
+          onChangeText={onChangeMessage}
           multiline
         />
-        <View
+        <Pressable
           style={{
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: colors.primary,
+            backgroundColor: loading ? 'grey' : colors.primary,
             height: '100%',
             borderRadius: 8,
           }}
+          onPress={handleSendMessage}
+          disabled={loading}
         >
           <Text style={{ color: 'white', fontWeight: '700' }}>SEND</Text>
-        </View>
+        </Pressable>
       </View>
+    </View>
+  )
+}
+
+function showProfile({ route, navigation }) {
+  const { userData, friendsProfiles } = useAuth()
+  const [profileData, setProfileData] = useState({})
+
+  useEffect(() => {
+    const findProfile = friendsProfiles.find(
+      (profile) => profile.userId === route.params.userId,
+    )
+    setProfileData(findProfile)
+  }, [])
+
+  return (
+    <ScrollView>
+      <LineupProfile expanded={true} {...profileData} />
+    </ScrollView>
+  )
+}
+
+export function OpenFriend({ route, navigation }) {
+  const { colors } = useTheme()
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerTitle: () => (
+        <OpenMessageTitle
+          firstname={route.params.firstname}
+          profileImgUrl={route.params.profileImgUrl}
+        />
+      ),
+      headerRight: () => (
+        <Button
+          title="test"
+          onPress={() => console.log(route.params.firstname)}
+        />
+      ),
+    })
+  }, [route])
+
+  return (
+    <View style={{ flex: 1 }}>
+      <OpenFriendTab.Navigator
+        tabBarOptions={{
+          labelStyle: { margin: 0 },
+          tabStyle: { padding: 10, minHeight: 40 },
+          indicatorStyle: {
+            backgroundColor: colors.primary,
+          },
+        }}
+        backBehavior="none"
+      >
+        <OpenFriendTab.Screen
+          name="Messages"
+          component={OpenMessage}
+          initialParams={route.params}
+        />
+        <OpenFriendTab.Screen
+          name="Profile"
+          component={showProfile}
+          initialParams={route.params}
+        />
+      </OpenFriendTab.Navigator>
     </View>
   )
 }
 
 export function Messages({ navigation }) {
   const { userData, friendsProfiles, messages, messagesLoading } = useAuth()
-
-  const reverseMessages = !messagesLoading ? messages.slice().reverse() : []
 
   return (
     <SafeAreaView style={styles.container}>
@@ -198,7 +328,7 @@ export function Messages({ navigation }) {
                 <Pressable
                   key={index}
                   onPress={() =>
-                    navigation.navigate('OpenMessage', {
+                    navigation.navigate('OpenFriend', {
                       userId: profile.userId,
                       firstname: profile.firstname,
                       profileImgUrl: profile.profileImgUrl,
@@ -207,7 +337,7 @@ export function Messages({ navigation }) {
                 >
                   <FriendsListItem
                     {...profile}
-                    {...reverseMessages.find(
+                    {...messages?.find(
                       ({ fromUserId, toUserId }) =>
                         fromUserId === profile.userId ||
                         toUserId === profile.userId,
@@ -277,10 +407,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 12,
+    fontSize: 16,
   },
-  sentAtBubble: {
+  sentAtText: {
     fontSize: 12,
     color: 'grey',
-    marginBottom: 8,
+    marginBottom: 6,
+    marginTop: 20,
+    alignSelf: 'center',
   },
 })

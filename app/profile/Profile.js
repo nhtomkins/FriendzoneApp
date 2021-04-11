@@ -81,6 +81,7 @@ export function EditInterests({ navigation }) {
               backgroundColor: colors.primary,
             },
           }}
+          backBehavior="none"
         >
           {interestData?.map((cat, i) => (
             <InterestTab.Screen
