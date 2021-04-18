@@ -1,21 +1,23 @@
 import React, { useState, useRef } from 'react'
 import {
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
   TextInput,
   Button,
   Alert,
+  Pressable,
 } from 'react-native'
 
+import { TextInput as PaperTextInput, useTheme } from 'react-native-paper'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useForm, Controller } from 'react-hook-form'
 
 import { useAuth } from '../../contexts/AuthContext'
 
-function Login({ nav }) {
+function Login({ navigation }) {
   const { login } = useAuth()
-
+  const { colors } = useTheme()
   const { control, handleSubmit, errors } = useForm()
   const [loading, setLoading] = useState(false)
 
@@ -32,73 +34,111 @@ function Login({ nav }) {
     //nav.navigate('Main')
   }
 
-  const [emailFocus, setEmailFocus] = useState(false)
-  const [passwordFocus, setPasswordFocus] = useState(false)
+  const emailRef = useRef()
+  const passwordRef = useRef()
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Email</Text>
-      <Controller
-        control={control}
-        render={({ onChange, onBlur, value }) => (
-          <TextInput
-            style={[styles.input, emailFocus && styles.inputFocus]}
-            onFocus={() => setEmailFocus(true)}
-            onBlur={() => {
-              onBlur()
-              setEmailFocus(false)
-            }}
-            onChangeText={(value) => onChange(value)}
-            value={value}
-            autoCompleteType="email"
-            textContentType="emailAddress"
-            keyboardType="email-address"
+    <SafeAreaView style={styles.container}>
+      <Pressable
+        style={styles.container}
+        onPress={() => navigation.navigate('Main')}
+      >
+        <Pressable
+          style={styles.paper}
+          onPress={() => {
+            emailRef.current.blur()
+            passwordRef.current.blur()
+          }}
+        >
+          <Text style={[styles.title, { color: colors.primary }]}>Sign in</Text>
+          <Controller
+            control={control}
+            render={({ onChange, onBlur, value }) => (
+              <PaperTextInput
+                style={styles.paperInput}
+                label="Email"
+                mode="outlined"
+                dense
+                ref={emailRef}
+                value={value}
+                //onFocus={() => emailRef.current.focus()}
+                onBlur={() => {
+                  onBlur()
+                  //emailRef.current.blur()
+                }}
+                onChangeText={(value) => onChange(value)}
+                autoCompleteType="email"
+                textContentType="emailAddress"
+                keyboardType="email-address"
+              />
+            )}
+            name="email"
+            rules={{ required: true }}
+            defaultValue=""
           />
-        )}
-        name="email"
-        rules={{ required: true }}
-        defaultValue=""
-      />
-      {errors.email && <Text>This is required.</Text>}
-      <Text style={styles.label}>Password</Text>
-      <Controller
-        control={control}
-        render={({ onChange, onBlur, value }) => (
-          <TextInput
-            style={[styles.input, passwordFocus && styles.inputFocus]}
-            onFocus={() => setPasswordFocus(true)}
-            onBlur={() => {
-              onBlur()
-              setPasswordFocus(false)
-            }}
-            onChangeText={(value) => onChange(value)}
-            value={value}
-            autoCompleteType="password"
-            textContentType="password"
-            secureTextEntry
+          {errors.email && <Text>This is required.</Text>}
+          <Controller
+            control={control}
+            render={({ onChange, onBlur, value }) => (
+              <PaperTextInput
+                //style={[styles.input, passwordFocus && styles.inputFocus]}
+                style={styles.paperInput}
+                label="Password"
+                mode="outlined"
+                dense
+                ref={passwordRef}
+                //onFocus={() => passwordRef.current.focus()}
+                onBlur={() => {
+                  onBlur()
+                  //passwordRef.current.blur()
+                }}
+                onChangeText={(value) => onChange(value)}
+                value={value}
+                autoCompleteType="password"
+                textContentType="password"
+                secureTextEntry
+              />
+            )}
+            name="password"
+            rules={{ required: true }}
+            defaultValue=""
           />
-        )}
-        name="password"
-        rules={{ required: true }}
-        defaultValue=""
-      />
-      {errors.password && <Text>This is required.</Text>}
-
-      <Button
-        title="Submit"
-        disabled={loading}
-        onPress={handleSubmit(onSubmit)}
-      />
-    </View>
+          {errors.password && <Text>This is required.</Text>}
+          <View style={styles.submitButton}>
+            <Button
+              color={colors.primary}
+              title="Login"
+              disabled={loading}
+              onPress={handleSubmit(onSubmit)}
+            />
+          </View>
+        </Pressable>
+      </Pressable>
+    </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 12,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  paper: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    paddingVertical: 30,
     width: '80%',
+    flex: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: '700',
+    marginBottom: 20,
   },
   input: {
     borderColor: 'lightgrey',
@@ -108,6 +148,14 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 6,
     marginBottom: 10,
+  },
+  paperInput: {
+    marginBottom: 5,
+    width: '70%',
+  },
+  submitButton: {
+    marginTop: 20,
+    width: '40%',
   },
   inputFocus: {
     borderColor: 'dodgerblue',

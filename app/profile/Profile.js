@@ -116,7 +116,15 @@ export function MyProfile() {
 }
 
 export function Profile({ navigation }) {
-  const { userData } = useAuth()
+  const { userData, logout } = useAuth()
+
+  async function handleLogout(e) {
+    try {
+      await logout()
+    } catch {
+      console.log('Failed to log out')
+    }
+  }
 
   return (
     <SafeAreaView>
@@ -146,6 +154,10 @@ export function Profile({ navigation }) {
             >
               <MaterialIcons name="image" size={24} color="black" />
               <Text>Edit Interests</Text>
+            </Pressable>
+            <Pressable style={styles.bigButton} onPress={handleLogout}>
+              <MaterialIcons name="person" size={24} color="black" />
+              <Text>Logout</Text>
             </Pressable>
           </View>
         </ScrollView>

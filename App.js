@@ -1,6 +1,15 @@
 import { StatusBar } from 'expo-status-bar'
 import React, { useState, useEffect } from 'react'
-import { StyleSheet, Text, View, TextInput, Button, Alert } from 'react-native'
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  Button,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { NavigationContainer } from '@react-navigation/native'
@@ -31,8 +40,11 @@ import {
 } from './app/profile/Profile'
 
 import { Messages, OpenFriend } from './app/messages/Messages'
+import Signup from './app/landing/Signup'
+import Login from './app/landing/Login'
 
-const Stack = createStackNavigator()
+const MainStack = createStackNavigator()
+const LandingStack = createStackNavigator()
 //const Tab = createBottomTabNavigator()
 const Tab = createMaterialTopTabNavigator()
 //Tab = createMaterialBottomTabNavigator()
@@ -81,6 +93,7 @@ function MainNavigator() {
         showLabel: false,
         activeTintColor: colors.primary,
         inactiveTintColor: 'gray',
+        keyboardHidesTabBar: Platform.OS == 'ios' ? false : true,
         indicatorStyle: {
           backgroundColor: '#673ab7',
         },
@@ -137,10 +150,13 @@ function Main() {
   const { colors } = useTheme()
 
   return (
-    <NavigationContainer>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
       <StatusBar style="light" backgroundColor={colors.primary} />
       {currentUser ? (
-        <Stack.Navigator
+        <MainStack.Navigator
           screenOptions={{
             headerStyle: {
               backgroundColor: colors.primary,
@@ -148,33 +164,59 @@ function Main() {
             headerTintColor: 'white',
           }}
         >
-          <Stack.Screen
+          <MainStack.Screen
             name="Main"
             component={MainNavigator}
             options={{ headerShown: false }}
           />
-          <Stack.Screen name="LineupExpanded" component={LineupExpanded} />
-          <Stack.Screen
+          <MainStack.Screen name="LineupExpanded" component={LineupExpanded} />
+          <MainStack.Screen
             name="MyProfile"
             component={MyProfile}
             options={{ title: 'My Profile' }}
           />
-          <Stack.Screen
+          <MainStack.Screen
             name="EditProfile"
             component={EditProfile}
             options={{ title: 'Edit Profile' }}
           />
-          <Stack.Screen
+          <MainStack.Screen
             name="EditInterests"
             component={EditInterests}
             options={{ title: 'Edit Interests' }}
           />
-          <Stack.Screen name="OpenFriend" component={OpenFriend} />
-        </Stack.Navigator>
+          <MainStack.Screen name="OpenFriend" component={OpenFriend} />
+        </MainStack.Navigator>
       ) : (
-        <LandingPage />
+        <LandingStack.Navigator
+          mode="modal"
+          screenOptions={{
+            headerShown: false,
+            cardStyle: { backgroundColor: 'transparent' },
+            cardOverlayEnabled: true,
+            cardStyleInterpolator: ({ current: { progress } }) => ({
+              cardStyle: {
+                opacity: progress.interpolate({
+                  inputRange: [0, 0.5, 0.9, 1],
+                  outputRange: [0, 0.25, 0.7, 1],
+                }),
+              },
+              overlayStyle: {
+                opacity: progress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 0.5],
+                  extrapolate: 'clamp',
+                }),
+              },
+            }),
+          }}
+        >
+          <LandingStack.Screen name="Main" component={LandingPage} />
+          <LandingStack.Screen name="Signup" component={Signup} />
+          <LandingStack.Screen name="Login" component={Login} />
+        </LandingStack.Navigator>
       )}
-    </NavigationContainer>
+    </KeyboardAvoidingView>
   )
 }
 
@@ -183,7 +225,9 @@ export default function App() {
     <SafeAreaProvider>
       <AuthProvider>
         <PaperProvider theme={theme}>
-          <Main />
+          <NavigationContainer>
+            <Main />
+          </NavigationContainer>
         </PaperProvider>
       </AuthProvider>
     </SafeAreaProvider>
@@ -193,7 +237,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    //alignItems: 'center',
     justifyContent: 'center',
   },
   background: {

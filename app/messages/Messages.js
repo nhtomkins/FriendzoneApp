@@ -11,6 +11,9 @@ import {
   Pressable,
   ScrollView,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StatusBar,
 } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -54,27 +57,38 @@ function MessageBubble({ side, message, first }) {
 
   return (
     <View
-      style={{
-        flex: 0.7,
-        alignItems: side === 'left' ? 'flex-start' : 'flex-end',
-        marginVertical: 1,
-        //marginHorizontal: 5,
-      }}
+      style={[
+        {
+          flex: 0,
+          maxWidth: '70%',
+          alignItems: side === 'left' ? 'flex-start' : 'flex-end',
+          marginVertical: 1,
+          overflow: 'hidden',
+          borderRadius: 20,
+          //marginHorizontal: 5,
+        },
+        side === 'left'
+          ? {
+              borderTopLeftRadius: first ? 20 : 8,
+              borderBottomLeftRadius: 8,
+              backgroundColor: 'lightgrey',
+            }
+          : {
+              borderTopRightRadius: first ? 20 : 8,
+              borderBottomRightRadius: 8,
+              backgroundColor: colors.primary,
+            },
+      ]}
     >
       <Text
         style={[
           styles.bubble,
           side === 'left'
             ? {
-                backgroundColor: 'lightgrey',
-                borderTopLeftRadius: first ? 20 : 8,
-                borderBottomLeftRadius: 8,
+                color: 'black',
               }
             : {
-                backgroundColor: colors.primary,
                 color: 'white',
-                borderTopRightRadius: first ? 20 : 8,
-                borderBottomRightRadius: 8,
               },
         ]}
       >
@@ -106,11 +120,11 @@ export function OpenMessage({ route, navigation }) {
   const { userData, messages, sendPrivateMessage } = useAuth()
   const [openUserMessages, setOpenUserMessages] = useState([])
   const { colors } = useTheme()
-  const insets = useSafeAreaInsets()
   const messagesListRef = useRef()
   const [message, onChangeMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const insets = useSafeAreaInsets()
 
   useEffect(() => {
     const filtMessages = []
@@ -404,7 +418,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   bubble: {
-    borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 12,
     fontSize: 16,
